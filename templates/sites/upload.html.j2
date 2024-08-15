@@ -11,17 +11,13 @@
 
         </br>
 
-        <h1>Create Page for {{site.name}}</h1>
+        <h1>Upload Site</h1>
 
         </br></br>
 
-        <form action="/sites/{{site.name}}/pages/create" method="post">
-          <div class="form-group">
-            <label for="site-name">Page Title</label>
-            <input name="title" type="text" class="form-control" id="title" placeholder="Enter Title">
-          </div>
+        <form action="/sites/{{site_name}}/upload" method="post">
           </br>
-          <button type="submit" class="btn btn-primary">Submit</button>
+          <button type="submit" class="btn btn-primary">Upload</button>
         </form>
       </div>
 

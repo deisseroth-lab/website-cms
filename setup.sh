@@ -12,4 +12,6 @@ pyenv virtualenv $PYTHON_VERSION $VENV_NAME
 
 pyenv activate $VENV_NAME
 
+mkdir $(dirname "$0")/site-data
+
 # pre-commit install

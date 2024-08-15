@@ -1,3 +1,4 @@
+site-data/
 *.sqlite
 
 # Byte-compiled / optimized / DLL files

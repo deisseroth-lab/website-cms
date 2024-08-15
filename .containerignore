@@ -1,0 +1,10 @@
+# Ignore all
+*
+
+# Allow some
+!public/
+!templates/
+!requirements.txt
+!README.md
+!run.sh
+!website_cms/

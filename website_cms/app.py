@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from litestar import Litestar, get, post
 from litestar.contrib.jinja import JinjaTemplateEngine
@@ -97,12 +97,11 @@ async def sites_upload_post(site_name:str) -> Redirect:
 async def pages_edit(site_name:str, page_name:str) -> Template:
 
     site = await get_site_by_name(site_name)
-
-    # page = await get_page_by_name(site, page)
+    page = await get_page_by_title(site, page_name)
 
     return Template(
         template_name="pages/edit.html.j2",
-        context={"site_name": site_name, "page_name": page_name}
+        context={"site": site, "page": page}
     )
 
 
@@ -151,13 +150,31 @@ async def pages_save_post(
     return True
     # return Redirect("/")
 
+@get(
+    "/sites/{site_name:str}/pages/{page_name:str}/load",
+    media_type="application/json"
+)
+async def pages_load() -> dict[str, Any]:
+    return {
+        "projects": [{
+            "id": 1,
+            "data": {
+                "assets": [],
+                "styles": [],
+                "pages": [{
+                    "component": "<div>Initial content</div>"
+                }]
+            }
+        }]
+    }
+
 
 
 app = Litestar(
     route_handlers=[
         sites, sites_view, sites_create, sites_create_post,
         sites_upload, sites_upload_post,
-        pages_edit, pages_create, pages_create_post, pages_save_post,
+        pages_edit, pages_create, pages_create_post, pages_save_post, pages_load,
         create_static_files_router(path="/", directories=["public"]),
     ],
     on_startup=[on_startup],

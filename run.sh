@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PORT=8000
+PORT=8080
 AUTH_PORT=5001
 
 # case $OSTYPE in

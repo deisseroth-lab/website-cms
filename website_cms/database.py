@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, func, select
+from sqlalchemy import ForeignKey, func, MetaData, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncEngine, AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,21 +16,22 @@ from litestar.contrib.sqlalchemy.plugins import AsyncSessionConfig, SQLAlchemyAs
 
 from .page import Page
 from .site import Site
-from .engine import engine
+from .engine import engine, DATABASE_URI
 
 session_config = AsyncSessionConfig(expire_on_commit=False)
 sqlalchemy_config = SQLAlchemyAsyncConfig(
-    connection_string="sqlite+aiosqlite:///test.sqlite",
+    connection_string=DATABASE_URI,
     session_config=session_config,
     create_all=True
-)  # Create 'async_session' dependency.
-
+)
 
 async def init_models():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
+    # initialize database
+    async with sqlalchemy_config.get_engine().begin() as session:
+        await session.run_sync(UUIDBase.metadata.drop_all)
+        await session.run_sync(UUIDBase.metadata.create_all)
 
+    return None
 
 async def on_startup() -> None:
     async_session = async_sessionmaker(engine, expire_on_commit=False)
@@ -38,26 +39,31 @@ async def on_startup() -> None:
     # async with async_session() as session:
     async with sqlalchemy_config.get_engine().begin() as session:
         # initialize database
-        # await session.run_sync(UUIDBase.metadata.create_all)
 
-        await session.run_sync(UUIDBase.metadata.drop_all)
+        # this will delete any data in existing database
+        # await session.run_sync(UUIDBase.metadata.drop_all)
+
         await session.run_sync(UUIDBase.metadata.create_all)
 
-        # async def init_models():
-        #     async with async_session().begin() as conn:
-        #     await conn.run_sync(Base.metadata.drop_all)
-        #     await conn.run_sync(Base.metadata.create_all)
-
-# asyncio.run(init_models())
-
     async with async_session() as session:
-        # adds some dummy data if no data is present."""
+        # async with engine.connect() as conn:
+        #     metadata = MetaData(schema='public')
+        #     await conn.run_sync(metadata.reflect)
+        # print(metadata.tables)
+
+        # adds seed data if none is present
+        # TODO move to separate seed.py file
         statement = select(func.count()).select_from(Site)
         count = await session.execute(statement)
         if not count.scalar():
             site_id = uuid.uuid4()
             session.add(
-                Site(name="literary", url="http://deisseroth.org/", id=site_id)
+                Site(
+                    name="literary",
+                    url="http://deisseroth.org/",
+                    id=site_id,
+                    type="Static"
+                )
             )
             session.add(Page(title="Index", site_id=site_id))
 
@@ -66,7 +72,8 @@ async def on_startup() -> None:
                 Site(
                     name="group",
                     url="https://web.stanford.edu/group/dlab/",
-                    id=site_id
+                    id=site_id,
+                    type="Static"
                 )
             )
             session.add(Page(title="Index", site_id=site_id))

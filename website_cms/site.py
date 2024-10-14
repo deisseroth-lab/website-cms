@@ -11,6 +11,7 @@ import asyncio
 from litestar import Litestar
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase, UUIDBase
 
+from .git import GitRepo
 from .engine import engine
 
 class Site(UUIDAuditBase):
@@ -20,10 +21,18 @@ class Site(UUIDAuditBase):
     additional columns: `created_at` and `updated_at`. `created_at` is a
     timestamp of when the record created, and `updated_at` is the last time the
     record was modified."""
+
     __tablename__ = "site"
 
     name: Mapped[str] = mapped_column(unique=True)
     url: Mapped[str]
+    type: Mapped[str] # TODO maybe make this enum?
+
+    # TODO add repo data to Site object (and maybe Repo needs to be a separate class)
+    # local_dir
+    # remote(s)
+    # ???
+
     pages: Mapped[list[Page]] = relationship(
         back_populates="site", lazy="selectin"
     )
@@ -36,6 +45,7 @@ class Site(UUIDAuditBase):
 class SiteData:
     name: str
     url: str
+    type: str
 
 
 async def get_sites():
@@ -82,9 +92,14 @@ async def create_site(site: SiteData, async_session: async_sessionmaker[AsyncSes
 
     async with async_session() as session:
         site_id = uuid.uuid4()
-        site = Site(name=site.name, url=site.url, id=site_id)
+        site = Site(name=site.name, url=site.url, id=site_id, type=site.type)
         session.add(site)
         await session.commit()
+
+
+    repo = GitRepo(site.name)
+    template="default"
+    repo.populate(template)
 
     return site
 

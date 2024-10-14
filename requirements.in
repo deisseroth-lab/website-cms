@@ -1,3 +1,4 @@
 aiosqlite
+GitPython
 litestar[standard,sqlalchemy]
 sqlalchemy

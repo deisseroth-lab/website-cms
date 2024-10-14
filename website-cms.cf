@@ -13,8 +13,11 @@ RUN pip --no-cache-dir install -r requirements.txt
 USER appuser
 COPY . /usr/src/app/
 
-# COPY run.sh /usr/src/app/
+COPY run.sh /usr/src/app/
 
 ENV PYTHONUNBUFFERED=0
-EXPOSE 8000
-CMD ["./run.sh", "--host 0.0.0.0"]
+# EXPOSE 8000
+# CMD ["./run.sh", "--host 0.0.0.0"]
+
+EXPOSE $PORT
+CMD exec litestar --app website_cms.app:app run -d --port $PORT $@

@@ -158,17 +158,16 @@ async def pages_save_post(
     media_type="application/json"
 )
 async def pages_load() -> dict[str, Any]:
+
     return {
-        "projects": [{
-            "id": 1,
-            "data": {
-                "assets": [],
-                "styles": [],
-                "pages": [{
-                    "component": "<div>Initial content</div>"
-                }]
-            }
-        }]
+        "id": 1,
+        "data": {
+            "assets": [],
+            "styles": [],
+            "pages": [{
+                "component": "<div>Initial content</div>"
+            }]
+        }
     }
 
 

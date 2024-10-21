@@ -68,8 +68,8 @@
 
     <script type="text/javascript">
       const projectID = 1;
-      const loadUrl = "/sites/{{site.name}}/pages/{{page.title}}/load";
-      // const loadUrl = "http://localhost:8000/projects/1";
+      // const loadUrl = "/sites/{{site.name}}/pages/{{page.title}}/load";
+      const loadUrl = "http://localhost:3000/projects/1";
 
       var editor  = grapesjs.init({
         height: '100%',
@@ -79,10 +79,12 @@
         selectorManager: { componentFirst: true },
         storageManager: {
           type: 'remote',
-          stepsBeforeSave: 3,
+          // autosave: true,
+          // autoload: true,
+          stepsBeforeSave: 1,
           options: {
             remote: {
-              // urlLoad: loadUrl,
+              urlLoad: loadUrl,
               urlStore: "/sites/{{site.name}}/pages/{{page.title}}/save",
               // The `remote` storage uses the POST method when stores data but
               // the json-server API requires PATCH.

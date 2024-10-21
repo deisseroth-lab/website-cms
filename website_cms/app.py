@@ -4,6 +4,7 @@ from typing import Annotated, Any
 
 from litestar import Litestar, get, post
 from litestar.contrib.jinja import JinjaTemplateEngine
+from litestar.config.cors import CORSConfig
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template
@@ -16,6 +17,8 @@ from .database import on_startup
 
 from .site import Site, SiteData, get_sites, get_site_by_name, create_site, upload_site
 from .page import Page, PageData, create_page, get_page_by_title, save_page
+
+cors_config = CORSConfig(allow_origins=["http://localhost:3000/", "http://localhost:8080/",])
 
 @get("/")
 async def sites() -> Template:
@@ -180,5 +183,6 @@ app = Litestar(
     on_startup=[on_startup],
     template_config=TemplateConfig(
         directory=Path("templates"), engine=JinjaTemplateEngine
-    )
+    ),
+    cors_config=cors_config
 )

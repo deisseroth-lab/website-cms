@@ -29,14 +29,7 @@
     <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
   </head>
   <body>
-    <div style="display: none">
-      <div class="gjs-logo-cont">
-        <a href="https://grapesjs.com"><img class="gjs-logo" src="/img/grapesjs-logo-cl.png"></a>
-        <div class="gjs-logo-version"></div>
-      </div>
-    </div>
     <div class="ad-cont">
-      <!-- <script async type="text/javascript" src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=grapesjscom" id="_carbonads_js"></script> -->
       <div id="native-carbon"></div>
       <script async type="text/js" src="js/carbon-v2.js"></script>
     </div>
@@ -88,11 +81,11 @@
               urlStore: "/sites/{{site.name}}/pages/{{page.title}}/save",
               // The `remote` storage uses the POST method when stores data but
               // the json-server API requires PATCH.
-              fetchOptions: opts => (opts.method === 'POST' ?  { method: 'PATCH' } : {}),
+              // fetchOptions: opts => (opts.method === 'POST' ?  { method: 'PATCH' } : {}),
               // As the API stores projects in this format `{id: 1, data: projectData }`,
               // we have to properly update the body before the store and extract the
               // project data from the response result.
-              onStore: data => ({ id: 1, data }),
+              onStore: data => ({ title: "{{page.title}}", html: editor.getHtml(), css: editor.getCss() }),
               onLoad: result => result.data,
             }
           }
@@ -118,9 +111,9 @@
           'grapesjs-tui-image-editor': {
             script: [
               // 'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.6.7/fabric.min.js',
-              'https://uicdn.toast.com/tui.code-snippet/v1.5.2/tui-code-snippet.min.js',
-              'https://uicdn.toast.com/tui-color-picker/v2.2.7/tui-color-picker.min.js',
-              'https://uicdn.toast.com/tui-image-editor/v3.15.2/tui-image-editor.min.js'
+              // 'https://uicdn.toast.com/tui.code-snippet/v1.5.2/tui-code-snippet.min.js',
+              // 'https://uicdn.toast.com/tui-color-picker/v2.2.7/tui-color-picker.min.js',
+              // 'https://uicdn.toast.com/tui-image-editor/v3.15.2/tui-image-editor.min.js'
             ],
             style: [
               'https://uicdn.toast.com/tui-color-picker/v2.2.7/tui-color-picker.min.css',
@@ -283,9 +276,9 @@
 
         // Show logo with the version
         var logoCont = document.querySelector('.gjs-logo-cont');
-        document.querySelector('.gjs-logo-version').innerHTML = 'v' + grapesjs.version;
-        var logoPanel = document.querySelector('.gjs-pn-commands');
-        logoPanel.appendChild(logoCont);
+        // document.querySelector('.gjs-logo-version').innerHTML = 'v' + grapesjs.version;
+        // var logoPanel = document.querySelector('.gjs-pn-commands');
+        // logoPanel.appendChild(logoCont);
 
 
         // Load and show settings and style manager

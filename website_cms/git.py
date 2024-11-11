@@ -1,33 +1,38 @@
 import os
 
-from git import Repo
+from git import Git, Repo
 
 REPO_ROOT = "site-data"
 
 class GitRepo:
-    def __init__(self, name, url="", path="", root_path=REPO_ROOT):
+    def __init__(
+        self, name, url=None, clone=False, create=False, root_path=REPO_ROOT
+    ):
         self.name = name
         self.root_path = root_path
-        if not path:
-            self.path = f"{root_path}/{name}"
-        else:
-            self.path = f"{root_path}/{path}"
+        self.path = f"{root_path}/{name}"
 
-        if len(url) > 0:
+        assert url is not None
+        assert not (clone and create)
+
+        if clone:
             self.clone_repo(url, root_path)
-        elif len(path) != 0:
-            self.repo = self.create_repo(name, root_path)
 
+        if create:
+            self.create_repo(name, url, root_path)
 
     def clone_repo(self, url, root_path=REPO_ROOT):
         repo = Repo.clone_from(repo_url, root_path)
         repo.close()
 
-    def create_repo(self, name, root_path=REPO_ROOT):
+    def create_repo(self, name, url, root_path=REPO_ROOT):
         if not os.access(root_path, os.F_OK):
             os.mkdir(root_path)
 
         repo = Repo.init(f"{root_path}/{name}")
+        if len(repo.remotes) == 0:
+            repo.create_remote("origin", url=url)
+        print(repo.remotes)
         repo.close()
 
     def populate(self, template="default"):
@@ -37,7 +42,7 @@ class GitRepo:
     def update_files(self, files):
         for file in files:
             # TODO validate strings
-            with open(f"{self.path}/{file[0]}", "w") as f:
+            with open(f"{self.path}/{file[0]}", "w+") as f:
                 f.write(file[1])
 
 
@@ -53,3 +58,18 @@ class GitRepo:
         repo = Repo(self.path)
         repo.index.commit(message)
         repo.close()
+
+    def push(self):
+        repo = Repo(self.path)
+        origin = repo.remotes[0]
+        print(repo.remotes)
+        print(origin)
+
+        git_ssh_identity_file = os.path.expanduser('~/.ssh/starmap-resources')
+        git_ssh_cmd = 'ssh -i %s' % git_ssh_identity_file
+        print(git_ssh_cmd)
+
+        with repo.git.custom_environment(GIT_SSH_COMMAND=git_ssh_cmd):
+            origin.fetch()
+            origin.push("main:main").raise_if_error()
+

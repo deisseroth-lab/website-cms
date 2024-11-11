@@ -7,7 +7,7 @@ from litestar.contrib.jinja import JinjaTemplateEngine
 from litestar.config.cors import CORSConfig
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template
+from litestar.response import Template, Response
 from litestar.response.redirect import Redirect
 from litestar.static_files import create_static_files_router
 from litestar.template.config import TemplateConfig
@@ -16,7 +16,7 @@ from litestar.exceptions import NotFoundException
 from .database import on_startup
 
 from .site import Site, SiteData, get_sites, get_site_by_name, create_site, upload_site
-from .page import Page, PageData, create_page, get_page_by_title, save_page
+from .page import Page, PageData, create_page, get_page_by_title, get_page_data, save_page
 
 cors_config = CORSConfig(allow_origins=["http://localhost:3000/", "http://localhost:8080/",])
 
@@ -59,9 +59,7 @@ async def sites_create_post(#data: dict[str, str]) -> dict[str, str]:
     data: Annotated[SiteData, Body(media_type=RequestEncodingType.URL_ENCODED)],
 ) -> Redirect:
 
-    print(data)
     site = await create_site(data)
-    print(site)
 
     return Redirect("/")
 
@@ -93,6 +91,7 @@ async def sites_upload_post(site_name:str) -> Redirect:
 
     site = await upload_site(site)
 
+    # return Response({"Status": "Uploaded"}, status_code=201)
     return Redirect("/")
 
 
@@ -136,15 +135,16 @@ async def pages_create_post(
 
     return Redirect(f"/sites/{site_name}")
 
-@post("/sites/{site_name:str}/pages/{page_name:str}/save")
+@post("/sites/{site_name:str}/pages/{page_title:str}/save")
 async def pages_save_post(
-    site_name: str, page_name: str,
+    site_name: str, page_title: str,
     data: Annotated[PageData, Body(media_type=RequestEncodingType.JSON)],
 ) -> bool:
 
     site = await get_site_by_name(site_name)
-    page = await get_page_by_title(site, page_name)
+    page = await get_page_by_title(site, page_title)
 
+    print(data)
     print(site)
     print(page)
 
@@ -154,19 +154,22 @@ async def pages_save_post(
     # return Redirect("/")
 
 @get(
-    "/sites/{site_name:str}/pages/{page_name:str}/load",
+    "/sites/{site_name:str}/pages/{page_title:str}/load",
     media_type="application/json"
 )
-async def pages_load() -> dict[str, Any]:
+async def pages_load(site_name: str, page_title: str) -> dict[str, Any]:
+
+    site = await get_site_by_name(site_name)
+    page = await get_page_by_title(site, page_title)
+    page_html, page_css = get_page_data(page)
 
     return {
         "id": 1,
         "data": {
             "assets": [],
-            "styles": [],
+            "styles": [{"component": page_css}],
             "pages": [{
-                "component": "<div>Initial content</div>"
-            }]
+                "component": page_html}]
         }
     }
 

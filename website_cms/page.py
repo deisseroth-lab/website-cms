@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
+from typing import Optional
 
 from sqlalchemy import UUID, ForeignKey, select, UniqueConstraint
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 import asyncio
 from litestar import Litestar
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase, UUIDBase
@@ -21,6 +21,7 @@ class Page(UUIDAuditBase):
     """
 
     title: Mapped[str]
+    filename: Mapped[str]
 
     # do we need these with git? maybe, if we want different title/file names
     # html_file_object_id: Mapped[text??]
@@ -36,7 +37,7 @@ class Page(UUIDAuditBase):
 
 @dataclass
 class PageData:
-    title: str
+    title: str# Optional[str] = None
     html: str = ""
     css: str = ""
 
@@ -48,9 +49,17 @@ async def create_page(site: Site, page: PageData, async_session: async_sessionma
 
     async with async_session() as session:
         page_id = uuid.uuid4()
-        page = Page(title=page.title, id=page_id, site_id=site.id)
+        page = Page(title=page.title, filename=page.filename, id=page_id, site_id=site.id)
         session.add(page)
         await session.commit()
+
+    repo = GitRepo(site.name, site.repo_url)
+    repo.update_files([
+        (f"{page.filename}.html", ""),
+        (f"{page.filename}.css", "")
+    ])
+    repo.add([f"{page.filename}.html", f"{page.filename}.css"])
+    repo.commit("Initial commit.")
 
     return page
 
@@ -72,15 +81,29 @@ async def get_page_by_title(site: Site, title: str, async_session: async_session
     return None
 
 
+def get_page_data(page: Page) -> [str, str]:
+    repo = GitRepo(page.site.name, page.site.repo_url)
+
+    page_html = open(f"{repo.path}/{page.filename}.html").read()
+    page_css = open(f"{repo.path}/{page.filename}.css").read()
+
+    return page_html, page_css
+
+
 async def save_page(page: Page, page_data: PageData, async_session: async_sessionmaker[AsyncSession]=None) -> Page:
 
-    repo = GitRepo(page.site.name)
+    print("1")
+    repo = GitRepo(page.site.name, page.site.repo_url)
+    print("2")
     repo.update_files([
-        (f"{page_data.title}.html", page_data.html),
-        (f"{page_data.title}.css", page_data.css)
+        (f"{page.filename}.html", page_data.html),
+        (f"{page.filename}.css", page_data.css)
     ])
-    repo.add()
+    print("3")
+    repo.add([f"{page.filename}.html", f"{page.filename}.css"])
+    print("4")
     repo.commit()
+    print("5")
     # repo.push() # this should push to a remote branch, but not start an upload process yet
 
     print("PAGE HTML AND CSS SAVED")

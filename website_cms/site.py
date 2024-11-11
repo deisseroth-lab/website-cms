@@ -26,6 +26,7 @@ class Site(UUIDAuditBase):
 
     name: Mapped[str] = mapped_column(unique=True)
     url: Mapped[str]
+    repo_url: Mapped[str]
     type: Mapped[str] # TODO maybe make this enum?
 
     # TODO add repo data to Site object (and maybe Repo needs to be a separate class)
@@ -92,12 +93,12 @@ async def create_site(site: SiteData, async_session: async_sessionmaker[AsyncSes
 
     async with async_session() as session:
         site_id = uuid.uuid4()
-        site = Site(name=site.name, url=site.url, id=site_id, type=site.type)
+        site = Site(name=site.name, url=site.url, repo_url=site.repo_url, id=site_id, type=site.type)
         session.add(site)
         await session.commit()
 
 
-    repo = GitRepo(site.name)
+    repo = GitRepo(site.name, site.repo_url, create=True)
     template="default"
     repo.populate(template)
 
@@ -117,5 +118,8 @@ async def upload_site(site: Site, async_session: async_sessionmaker[AsyncSession
         pass
 
     print("UPLOADING SITE!")
+
+    repo = GitRepo(site.name, site.repo_url)
+    repo.push()
 
     return site

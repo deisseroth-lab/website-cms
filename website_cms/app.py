@@ -59,6 +59,8 @@ async def sites_create_post(#data: dict[str, str]) -> dict[str, str]:
     data: Annotated[SiteData, Body(media_type=RequestEncodingType.URL_ENCODED)],
 ) -> Redirect:
 
+
+    print(data)
     site = await create_site(data)
 
     return Redirect("/")

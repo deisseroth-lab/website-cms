@@ -46,6 +46,7 @@ class Site(UUIDAuditBase):
 class SiteData:
     name: str
     url: str
+    repo_url: str
     type: str
 
 
@@ -93,6 +94,7 @@ async def create_site(site: SiteData, async_session: async_sessionmaker[AsyncSes
 
     async with async_session() as session:
         site_id = uuid.uuid4()
+        print(site)
         site = Site(name=site.name, url=site.url, repo_url=site.repo_url, id=site_id, type=site.type)
         session.add(site)
         await session.commit()
@@ -120,6 +122,8 @@ async def upload_site(site: Site, async_session: async_sessionmaker[AsyncSession
     print("UPLOADING SITE!")
 
     repo = GitRepo(site.name, site.repo_url)
-    repo.push()
+    repo.push("prod")
+
+    print("UPLOADED SITE!")
 
     return site

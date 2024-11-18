@@ -40,6 +40,7 @@ class PageData:
     title: str# Optional[str] = None
     html: str = ""
     css: str = ""
+    push: Optional[bool] = False
 
 
 async def create_page(site: Site, page: PageData, async_session: async_sessionmaker[AsyncSession]=None) -> Page:
@@ -84,6 +85,9 @@ async def get_page_by_title(site: Site, title: str, async_session: async_session
 def get_page_data(page: Page) -> [str, str]:
     repo = GitRepo(page.site.name, page.site.repo_url)
 
+    # fetch latest changes
+    repo.pull()
+
     page_html = open(f"{repo.path}/{page.filename}.html").read()
     page_css = open(f"{repo.path}/{page.filename}.css").read()
 
@@ -92,19 +96,15 @@ def get_page_data(page: Page) -> [str, str]:
 
 async def save_page(page: Page, page_data: PageData, async_session: async_sessionmaker[AsyncSession]=None) -> Page:
 
-    print("1")
     repo = GitRepo(page.site.name, page.site.repo_url)
-    print("2")
     repo.update_files([
         (f"{page.filename}.html", page_data.html),
         (f"{page.filename}.css", page_data.css)
     ])
-    print("3")
     repo.add([f"{page.filename}.html", f"{page.filename}.css"])
-    print("4")
     repo.commit()
-    print("5")
-    # repo.push() # this should push to a remote branch, but not start an upload process yet
+    if page_data.push:
+        repo.push() # push to main, but no upload process yet
 
     print("PAGE HTML AND CSS SAVED")
     print(page_data.title)

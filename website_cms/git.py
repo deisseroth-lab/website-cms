@@ -36,13 +36,34 @@ class GitRepo:
         repo.close()
 
     def populate(self, template="default"):
-        # copier?
-        pass
+        # TODO use copier
+
+        self.update_files([
+            (
+                ".github/workflows/deploy.yaml",
+                """
+name: Static Upload
+run-name: Uploading site version ...
+on: [push]
+
+jobs:
+  static-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "TEST"
+                """,
+            ),
+        ])
+        self.add([".github/workflows/deploy.yaml"])
+        self.commit("add Github Actions workflow")
 
     def update_files(self, files):
         for file in files:
             # TODO validate strings
-            with open(f"{self.path}/{file[0]}", "w+") as f:
+            filepath = f"{self.path}/{file[0]}"
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            with open(filepath, "w+") as f:
                 f.write(file[1])
 
 
@@ -59,7 +80,7 @@ class GitRepo:
         repo.index.commit(message)
         repo.close()
 
-    def push(self):
+    def push(self, branch=None):
         repo = Repo(self.path)
         origin = repo.remotes[0]
         print(repo.remotes)
@@ -71,5 +92,22 @@ class GitRepo:
 
         with repo.git.custom_environment(GIT_SSH_COMMAND=git_ssh_cmd):
             origin.fetch()
-            origin.push("main:main").raise_if_error()
+            if not branch:
+                branch = "main"
+            origin.push(f"main:{branch}").raise_if_error()
+
+
+    def pull(self):
+        repo = Repo(self.path)
+        origin = repo.remotes[0]
+        print(repo.remotes)
+        print(origin)
+
+        git_ssh_identity_file = os.path.expanduser('~/.ssh/starmap-resources')
+        git_ssh_cmd = 'ssh -i %s' % git_ssh_identity_file
+        print(git_ssh_cmd)
+
+        with repo.git.custom_environment(GIT_SSH_COMMAND=git_ssh_cmd):
+            origin.fetch()
+            origin.pull("main:main")
 

@@ -85,7 +85,7 @@
               // As the API stores projects in this format `{id: 1, data: projectData }`,
               // we have to properly update the body before the store and extract the
               // project data from the response result.
-              onStore: data => ({ title: "{{page.title}}", html: editor.getHtml(), css: editor.getCss() }),
+              onStore: data => ({ push: false, title: "{{page.title}}", html: editor.getHtml(), css: editor.getCss() }),
               onLoad: result => result.data,
             }
           }
@@ -173,6 +173,7 @@
             fetch("/sites/{{site.name}}/pages/{{page.title}}/save", {
               method: "POST",
               body: JSON.stringify({
+                push: true,
                 title: "{{page.title}}",
                 html: editor.getHtml(),
                 css: editor.getCss()
